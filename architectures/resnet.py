@@ -7,7 +7,7 @@ class BasicBlock(nn.Module):
 
     def __init__(self, in_channels, interm_channels, stride=1, downsample=None):
         super(BasicBlock, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=interm_channels, kernel_size=3, stride=stride,
+        self.conv1 = nn.Conv2d(in_channels, out_channels=interm_channels, kernel_size=3, stride=stride,
                                padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(num_features=interm_channels)
         self.relu = nn.ReLU()
@@ -37,7 +37,7 @@ class Bottleneck(nn.Module):
     def __init__(self, in_channels, interm_channels, stride=1, downsample=None):
         super(Bottleneck, self).__init__()
         # 1x1 conv
-        self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=interm_channels, kernel_size=1, bias=False)
+        self.conv1 = nn.Conv2d(in_channels, out_channels=interm_channels, kernel_size=1, bias=False)
         self.bn1 = nn.BatchNorm2d(num_features=interm_channels)
 
         # 3x3 conv
@@ -70,8 +70,9 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, layers, num_classes=1000, zero_init_residual: bool = False, grayscale: bool = False):
+    def __init__(self, block, layers, num_classes=10, zero_init_residual: bool = False, grayscale: bool = False):
         super(ResNet, self).__init__()
+        # handles both color and grayscale images
         input_channels = 1 if grayscale else 3
         self.in_channels = 64
         self.conv1 = nn.Conv2d(input_channels, self.in_channels, kernel_size=7, stride=2, padding=3, bias=False)
@@ -79,13 +80,13 @@ class ResNet(nn.Module):
         self.relu = nn.ReLU()
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
-        self.layer1 = self._make_layer(block, 64, layers[0])
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
-        self.layer3 = self._make_layer(block, 256, layers[2], stride=2)
-        self.layer4 = self._make_layer(block, 512, layers[3], stride=2)
+        self.layer1 = self._make_layer(block, interm_channels=64, blocks=layers[0])
+        self.layer2 = self._make_layer(block, interm_channels=128, blocks=layers[1], stride=2)
+        self.layer3 = self._make_layer(block, interm_channels=256, blocks=layers[2], stride=2)
+        self.layer4 = self._make_layer(block, interm_channels=512, blocks=layers[3], stride=2)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(512 * block.expansion, num_classes)
+        self.fc = nn.Linear(in_features=512 * block.expansion, out_features=num_classes)
 
         # kaiming initialization for conv, constant initialization for bn
         for m in self.modules():
@@ -107,9 +108,9 @@ class ResNet(nn.Module):
         downsample = None
         if stride != 1 or self.in_channels != interm_channels * block.expansion:
             downsample = nn.Sequential(
-                nn.Conv2d(self.in_channels, interm_channels * block.expansion, kernel_size=1, stride=stride,
-                          bias=False),
-                nn.BatchNorm2d(interm_channels * block.expansion),
+                nn.Conv2d(in_channels=self.in_channels, out_channels=interm_channels * block.expansion, kernel_size=1,
+                          stride=stride, bias=False),
+                nn.BatchNorm2d(num_features=interm_channels * block.expansion),
             )
 
         layers = [block(self.in_channels, interm_channels, stride, downsample)]
