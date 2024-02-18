@@ -70,7 +70,7 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, layers, num_classes=10, grayscale: bool = False):
+    def __init__(self, block, layers, num_classes=1000, grayscale: bool = False):
         super(ResNet, self).__init__()
         input_channels = 1 if grayscale else 3
         self.in_channels = 64
@@ -87,10 +87,13 @@ class ResNet(nn.Module):
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(512 * block.expansion, num_classes)
 
-        # initializing weights
+        # kaiming initialization of conv layers, constant initialization for bn
         for m in self.modules():
-            nn.init.constant_(m.weight, 1)
-            nn.init.constant_(m.bias, 0)
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
 
     def _make_layer(self, block, interm_channels, blocks, stride=1):
         downsample = None
