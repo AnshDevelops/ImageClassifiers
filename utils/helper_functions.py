@@ -1,6 +1,7 @@
 import os
 import matplotlib.pyplot as plt
 from typing import Tuple, List, Dict
+import torch
 
 
 def get_num_files(path):
@@ -30,6 +31,12 @@ def find_classes(directory: str) -> Tuple[List[str], Dict[str, int]]:
     # create a dictionary of index labels (computers prefer numerical labels over string labels)
     class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
     return classes, class_to_idx
+
+
+def get_accuracy(y_true, y_pred):
+    correct = torch.eq(y_true, y_pred).sum().item()
+    acc = (correct / len(y_pred)) * 100
+    return acc
 
 
 def plot_loss_curves(results: Dict[str, List[float]]):
