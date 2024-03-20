@@ -1,23 +1,24 @@
 import torch
-import tqdm.auto as tqdm
+import tqdm
 
-from train_step import train_step
-from test_step import test_step
+from utils.train_step import train_step
+from utils.test_step import test_step
 
-def train(model: torch.nn.Module,
-          train_dataloader: torch.utils.data.DataLoader,
-          test_dataloader: torch.utils.data.DataLoader,
-          device: torch.device,
-          optimizer: torch.optim.Optimizer,
-          loss_fn: torch.nn.Module = torch.nn.CrossEntropyLoss,
-          epochs: int = 5):
+
+def train_model(model: torch.nn.Module,
+                train_dataloader: torch.utils.data.DataLoader,
+                test_dataloader: torch.utils.data.DataLoader,
+                device: torch.device,
+                optimizer: torch.optim.Optimizer,
+                loss_fn: torch.nn.Module = torch.nn.CrossEntropyLoss,
+                epochs: int = 5):
     results = {"train_loss": [],
                "train_acc": [],
                "test_loss": [],
                "test_acc": []
                }
 
-    for epoch in tqdm(range(epochs)):
+    for epoch in range(epochs):
         train_loss, train_acc = train_step(model=model,
                                            dataloader=train_dataloader,
                                            loss_fn=loss_fn,
