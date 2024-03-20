@@ -1,5 +1,4 @@
 import torch
-import tqdm
 
 from utils.train_step import train_step
 from utils.test_step import test_step
